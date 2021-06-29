@@ -56,6 +56,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($gendor)) {
         $errors[] = 'gendor is require!';
     }
+    // check if upload dir is not exist
+    if (!file_exists("public/upload")) {
+        mkdir("public/upload");
+    }
     // check if input filed is selected
     if (isset($_FILES['image']) && !empty($_FILES['image']['name'])) { 
         $file_name = $_FILES['image']['name'];
