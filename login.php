@@ -1,38 +1,48 @@
 <?php
+// require all libs
 require_once "public/paritals/header.php";
 require_once "./config/db.php";
 $errors = [];
+// check if user is login 
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) {
+    // redirect to welcome page
     header("Location: welcome.php");
     exit();
 }
+// if user access welcome page without login, show error message
 if (isset($_SESSION['error'])) {
     $errors[] = $_SESSION['error'];
     unset($_SESSION['error']);
 }
+// if request is post request
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // sanitize  email & password
     $email = htmlentities($_POST['email'], ENT_QUOTES, "utf-8");
     $password = htmlentities($_POST['password'], ENT_QUOTES, "utf-8");
 
+    // check if email is empty
     if (empty($email)) {
         $errors[] = 'email is require!';
     }
-
+    // check if password is empty
     if (empty($password)) {
         $errors[] = 'password is require!';
     }
+    // if there is no error, processed 
     if (empty($errors)) {
         $statment = $pdo->prepare("SELECT * FROM users WHERE email = :email;");
         $statment->bindValue(':email', $email);
         $statment->execute();
         $user = $statment->fetch();
+        // check if email exist
         if (empty($user)) {
             $errors[] = "email does not exist";
         } else {
+            // verify password 
             if (password_verify($password, $user['password'])) {
                 $_SESSION["loggedin"] = true;
                 $_SESSION["email"] = $email;
-                $_SESSION["fullname"] = $firstname . " " . $lastname;
+                $_SESSION["fullname"] = $user['firstname'] . " " . $user['lastname'];
                 $_SESSION['succuss'] = 'user ' . $user['firstname'] . " is succuessful login to the page";
                 $_SESSION["image"] = $user['photo'];
                 // Redirect user to welcome page
@@ -56,6 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     </div>
                     <div class="col-4">
+                    <!-- if there is any error -->
                         <?php
                         if (($errors)) {
                             foreach ($errors as $error) { ?>

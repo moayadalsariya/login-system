@@ -1,6 +1,7 @@
 <?php
+// require DB
 require_once "../config/db.php";
-
+// CREATE users table in DB
 try {
     $statment = $pdo->prepare("CREATE TABLE users (
         id SERIAL PRIMARY KEY,

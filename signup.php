@@ -4,7 +4,9 @@ require_once "public/paritals/header.php";
 require_once "./config/db.php";
 require_once "utils/functions.php";
 $errors = [];
+// check if request is post request
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // sanitize all post request from the form
     $firstname = htmlentities($_POST['firstname'], ENT_QUOTES, "utf-8");
     $lastname = htmlentities($_POST['lastname'], ENT_QUOTES, "utf-8");
     $email = htmlentities($_POST['email'], ENT_QUOTES, "utf-8");
@@ -14,19 +16,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $pattern = '/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/';
     $image = 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png';
 
+    // check if firstname empty
     if (empty($firstname)) {
         $errors[] = 'firstname is require!';
     }
+    // if if firstname is less than 3 character
     if (!empty($firstname) && strlen($firstname) < 3) {
         $errors[] = 'firstname should be more than 3 character !';
     }
-
+    // check if lastname empty
     if (empty($lastname)) {
         $errors[] = 'lastname is require!';
     }
+    // check if lastname less than 3 chracter
     if (!empty($lastname) && strlen($lastname) < 3) {
         $errors[] = 'last$lastname should be more than 3 character !';
     }
+    // check if email empty
     if (empty($email)) {
         $errors[] = 'email is require!';
     } else {
@@ -39,20 +45,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         }
     }
+    // check if email in the correct format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Invalid email format";
     }
-
+    // check if password is empty
     if (empty($password)) {
         $errors[] = 'password is require!';
     }
+    // check if password match the regex pattern
     if (!preg_match($pattern, $password)) {
         $errors[] = "password must be min 8 characters, at least 1 number, at least one uppercase, at least one lowercase";
     }
+    // check if password equal to confirm password
     if ($password != $confirm_password) {
         $errors[] = "confirm password must be same as password";
     }
-
+    // check if gendor is empty
     if (empty($gendor)) {
         $errors[] = 'gendor is require!';
     }
@@ -70,17 +79,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $image = str_replace(' ', '_', $image);
         $extensions = array("jpg", "png");
         $ext = pathinfo($file_name, PATHINFO_EXTENSION);
+        // check if image extenstions is jpg or png
         if (in_array($ext, $extensions) === false) {
             $errors[] = "extension not allowed, please choose a JPEG or PNG file.";
         }
+        // check if file size is greater than 2MB
         if ($file_size > 2097152) {
             $errors[] = 'File size must less than 2 MB';
         } else {
+            // upload the file to the server
             move_uploaded_file($file_tmp, $image);
         }
     }
+    // if there is no errors, processed 
     if (empty($errors)) {
+        // hash the password
         $password = password_hash($password, PASSWORD_DEFAULT);
+        // insert data into DB
         $statment = $pdo->prepare("INSERT INTO users (email,firstname,lastname,gendor,photo,password)
         VALUES (:email,:firstname,:lastname,:gendor,:photo,:password);");
         $statment->bindValue(':email', $email);
@@ -95,6 +110,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION["fullname"] = $firstname . " " . $lastname;
         $_SESSION["email"] = $email;
         $_SESSION["image"] = $image;
+        // redirect to the welcome page
         header("Location: welcome.php");
         // exit();
     }
@@ -111,6 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     </div>
                     <div class="col-6">
+                    <!-- check if the is errors -->
                         <?php
                         if (($errors)) {
                             foreach ($errors as $error) { ?>

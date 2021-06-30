@@ -24,11 +24,11 @@ session_start();
                 <?php
                 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) { ?>
                     <div class="text-end">
-                        <a href="login.php" class="text-dark me-2">ali omar</a>
+                        <a href="login.php" class="text-dark me-2"><?php echo $_SESSION["fullname"]; ?></a>
                     </div>
                     <div class="dropdown text-end">
                         <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src= <?php echo $_SESSION['image']; ?> alt="mdo" width="32" height="32" class="rounded-circle">
+                            <img src=<?php echo $_SESSION['image']; ?> alt="mdo" width="32" height="32" class="rounded-circle">
                         </a>
                         <ul class="dropdown-menu text-small" aria-labelledby="dropdownUser1">
                             <li><a class="dropdown-item" href="#">Settings</a></li>
@@ -39,6 +39,7 @@ session_start();
                             <li><a class="dropdown-item" href="logout.php">logout</a></li>
                         </ul>
                     </div>
+                    <!-- if user not login, show login and signup buttons -->
                 <?php } else {  ?>
                     <div class="text-end">
                         <a href="login.php" class="btn btn-light text-dark me-2"> Login</a>
