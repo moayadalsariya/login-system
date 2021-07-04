@@ -1,4 +1,5 @@
 // wait for DOM to load
+console.log("reach here");
 $(() => {
     $("#form-vaild").validate({
         rules: {
