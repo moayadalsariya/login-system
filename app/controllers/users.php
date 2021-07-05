@@ -1,13 +1,16 @@
 <?php
 class users extends Controller
 {
+    public function __construct()
+    {
+        $this->userModel = $this->model('User');
+    }
     public function index($name = '')
     {
         echo "user pages";
     }
     public function signup()
     {
-        require_once "../app/config/db.php";
         require_once "../app/utils/functions.php";
         // check if request is post request
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -43,10 +46,8 @@ class users extends Controller
                 $errors[] = 'email is require!';
             } else {
                 // check if email is already exist in DB
-                $statement = $pdo->prepare("SELECT * FROM users WHERE email = :email;");
-                $statement->bindValue(':email', $email);
-                $statement->execute();
-                if ($statement->rowCount() > 0) {
+                $user = $this->userModel->checkEmailExist($email);
+                if ($user) {
                     $errors[] = 'email is already exist!';
                 }
             }
@@ -98,18 +99,8 @@ class users extends Controller
             }
             // if there is no errors, processed 
             if (empty($errors)) {
-                // hash the password
-                $password = password_hash($password, PASSWORD_DEFAULT);
-                // insert data into DB
-                $statment = $pdo->prepare("INSERT INTO users (email,firstname,lastname,gendor,photo,password)
-        VALUES (:email,:firstname,:lastname,:gendor,:photo,:password);");
-                $statment->bindValue(':email', $email);
-                $statment->bindValue(':firstname', $firstname);
-                $statment->bindValue(':lastname', $lastname);
-                $statment->bindValue(':gendor', $gendor);
-                $statment->bindValue(':photo', $image);
-                $statment->bindValue(':password', $password);
-                $statment->execute();
+                // register user
+                $this->userModel->register($email, $firstname, $lastname, $gendor, $image, $gendor);
                 session_start();
                 $_SESSION['succuss'] = 'user ' . $firstname . " is succuessful singup to the page";
                 $_SESSION["loggedin"] = true;
@@ -131,7 +122,6 @@ class users extends Controller
     }
     public function login()
     {
-        require_once "../app/config/db.php";
         // if request is post request
         if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) {
             // redirect to welcome page
@@ -141,11 +131,6 @@ class users extends Controller
 
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors = [];
-            if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) {
-                // redirect to welcome page
-                header("Location: ../welcome.php");
-                exit();
-            }
             // sanitize  email & password
             $email = htmlentities($_POST['email'], ENT_QUOTES, "utf-8");
             $password = htmlentities($_POST['password'], ENT_QUOTES, "utf-8");
@@ -160,12 +145,15 @@ class users extends Controller
             }
             // if there is no error, processed 
             if (empty($errors)) {
-                $statment = $pdo->prepare("SELECT * FROM users WHERE email = :email;");
-                $statment->bindValue(':email', $email);
-                $statment->execute();
-                $user = $statment->fetch();
+                $user = $this->userModel->selectUserByEmail($email);
                 // check if email exist
-                if (empty($user)) {
+                if (password_verify($password, $user->password)) {
+                    echo "verify";
+                } else {
+                    echo "not verify";
+                }
+                die();
+                if (!($user)) {
                     session_start();
                     $errors[] = "email does not exist";
                     $_SESSION['errors'] = $errors;
@@ -173,13 +161,13 @@ class users extends Controller
                     header("location: login");
                 } else {
                     // verify password 
-                    if (password_verify($password, $user['password'])) {
+                    if (password_verify($password, $user->password)) {
                         session_start();
                         $_SESSION["loggedin"] = true;
                         $_SESSION["email"] = $email;
-                        $_SESSION["fullname"] = $user['firstname'] . " " . $user['lastname'];
-                        $_SESSION['succuss'] = 'user ' . $user['firstname'] . " is succuessful login to the page";
-                        $_SESSION["image"] = $user['photo'];
+                        $_SESSION["fullname"] = $user->firstname . " " . $user->lastname;
+                        $_SESSION['succuss'] = 'user ' . $user->firstname . " is succuessful login to the page";
+                        $_SESSION["image"] = $user->photo;
                         session_write_close();
                         header("location: ../welcome");
                     } else {
@@ -194,7 +182,7 @@ class users extends Controller
                 session_start();
                 $_SESSION['errors'] = $errors;
                 session_write_close();
-                header("location: login.php");
+                header("location: login");
             }
         } else {
             $this->view("login");
