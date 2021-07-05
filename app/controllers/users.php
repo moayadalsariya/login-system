@@ -80,7 +80,6 @@ class users extends Controller
                 $file_name = $_FILES['image']['name'];
                 $file_size = $_FILES['image']['size'];
                 $file_tmp = $_FILES['image']['tmp_name'];
-                $file_type = $_FILES['image']['type'];
                 $image = "../public/upload/" . random() . $file_name;
                 $image = str_replace(' ', '_', $image);
                 $extensions = array("jpg", "png");
@@ -100,7 +99,7 @@ class users extends Controller
             // if there is no errors, processed 
             if (empty($errors)) {
                 // register user
-                $this->userModel->register($email, $firstname, $lastname, $gendor, $image, $gendor);
+                $this->userModel->register($email, $firstname, $lastname, $gendor, $image, $password);
                 session_start();
                 $_SESSION['succuss'] = 'user ' . $firstname . " is succuessful singup to the page";
                 $_SESSION["loggedin"] = true;
@@ -147,12 +146,6 @@ class users extends Controller
             if (empty($errors)) {
                 $user = $this->userModel->selectUserByEmail($email);
                 // check if email exist
-                if (password_verify($password, $user->password)) {
-                    echo "verify";
-                } else {
-                    echo "not verify";
-                }
-                die();
                 if (!($user)) {
                     session_start();
                     $errors[] = "email does not exist";
